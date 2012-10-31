@@ -1,0 +1,47 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2 Final//EN">
+<HTML>
+<HEAD>
+ <META NAME="GENERATOR" CONTENT="SGML-Tools 1.0.6">
+ <TITLE>Agent interaction in JNS: Data Transfer</TITLE>
+ <LINK HREF="Agents-5.html" REL=next>
+ <LINK HREF="Agents-3.html" REL=previous>
+ <LINK HREF="Agents.html#toc4" REL=contents>
+</HEAD>
+<BODY>
+<A HREF="Agents-5.html">Next</A>
+<A HREF="Agents-3.html">Previous</A>
+<A HREF="Agents.html#toc4">Contents</A>
+<HR>
+<H2><A NAME="s4">4. Data Transfer</A></H2>
+
+<P>
+<H2><A NAME="ss4.1">4.1 Sending Data</A>
+</H2>
+
+<P>Data transfer works in a reactive way in JNS. You do not normally send data
+unless someone 'indicates' to you that you should do so. (Although you can
+if you want to.. and you have to as you will see).
+<P>The first thing to do when sending data is to call the canSend(...) function
+of the underlying service. If it returns <I>true</I>, call the send(...)
+function of the underlying service immediately and your data has been sent.
+<P>If canSend() returns false then you have to wait. You are now guaranteed to
+receive a call to your agent's indicate(...) function (see jns/agent/Agent.java for the agent interface. This is a function that every agent has). The
+parameter to this function might be READY_TO_SEND. In that case, you must
+call canSend() again and the whole game starts again.
+<P>
+<P>
+<H2><A NAME="ss4.2">4.2 Receiving Data</A>
+</H2>
+
+<P>Receiving data is even more reactive than sending data. There is no active
+element involved. When an underlying service has data for you, it will call
+your indicate(...) function with a parameter of PACKET_AVAILABLE. You can then
+call the read(...) function of the underlying service to get your packet.
+<P>
+<P>
+<HR>
+<A HREF="Agents-5.html">Next</A>
+<A HREF="Agents-3.html">Previous</A>
+<A HREF="Agents.html#toc4">Contents</A>
+</BODY>
+</HTML>

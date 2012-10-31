@@ -1,0 +1,42 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2 Final//EN">
+<HTML>
+<HEAD>
+ <META NAME="GENERATOR" CONTENT="SGML-Tools 1.0.6">
+ <TITLE>A quick overview of JNS: Adding features to IP</TITLE>
+ <LINK HREF="Overview-7.html" REL=next>
+ <LINK HREF="Overview-5.html" REL=previous>
+ <LINK HREF="Overview.html#toc6" REL=contents>
+</HEAD>
+<BODY>
+<A HREF="Overview-7.html">Next</A>
+<A HREF="Overview-5.html">Previous</A>
+<A HREF="Overview.html#toc6">Contents</A>
+<HR>
+<H2><A NAME="s6">6. Adding features to IP</A></H2>
+
+<P>If you have read the previous section, you can now embark on adding new 
+features to how JNS handles IP packets, for example multicasting. The source
+file you want to modify for this is <B>jns.elements/IPHandler.java</B>. For
+most purposes, you do not need to modify the link or interface files. Actually,
+for most purposes should only have to modify the <CODE>update()</CODE> function
+of the <CODE>IPHandler</CODE> class because that is the bit of code that takes
+care of routing packets, sending them, forwarding them to higher level
+protocols, etc.
+<P>
+<P>There are two loops in this function: One that processes all packets waiting
+to be sent. You will want to edit this if you want to make more complex
+routing decisions, provide cleaner fragmentation, etc. The other loop processes
+all packets that have been received and are either waiting to be sent on
+or waiting to be given to higher-level protocols or which were received
+erroneously and have to be discarded. You might have to edit this if, for
+example, you did provide some complex fragmentation code, because you will
+have to reassemble packets in a complex way then, right here. (By the way,
+there IS fragmentation support in JNS, you can see it right there).
+<P>
+<P>
+<HR>
+<A HREF="Overview-7.html">Next</A>
+<A HREF="Overview-5.html">Previous</A>
+<A HREF="Overview.html#toc6">Contents</A>
+</BODY>
+</HTML>

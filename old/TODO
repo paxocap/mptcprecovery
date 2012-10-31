@@ -1,0 +1,27 @@
+
+If you are feeling keen, here are a few things this simulator would benefit
+from:
+
+ - Further abstraction of network building. Some utility classes could be 
+   written to allow, for example, a node with an interface and all the  
+   routing setup to be built at once rather than specifying all of this.
+   You can take the idea further to build whole networks.
+
+ - You might want to put multicasting support in the IP handler so you can
+   write higher-level multicasting protocols.
+
+ - There is support for a 'metric' in every routing table entry. You can
+   write dynamic routing support by hooking in there. The 'metric' is an 
+   Object, so you can put in whatever you want.
+
+ - Complete the go-back-n protocol: Include timeouts to allow for lost
+   packets and to allow out of sequence delivery. Complete the multiplexer
+   class "SimpleGoBackN" to allow PROPER multiplexing. At the moment, 
+   different ports are allowed, but only one connection per port. It should
+   be one connection per (source port, source ip, dest port, dest ip
+   address).
+
+ - Implement TCP.
+
+ - Implement whatever protocol you want :)
+

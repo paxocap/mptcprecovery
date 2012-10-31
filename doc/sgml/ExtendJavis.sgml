@@ -1,0 +1,58 @@
+<!doctype linuxdoc system>
+
+<article>
+
+<title>How to add handling of new events to the JavisTrace class
+<author>Christian Nentwich (c.nentwich@cs.ucl.ac.uk)
+<date>01/03/1999
+
+<abstract>
+This file describes how handle additional events that occur in the simulator
+and write them into a trace-file, i.e. how to add output formatting support for
+previously unsupported events that occur in a network so 'Javis' can handle
+them (if it can).
+</abstract>
+
+<toc>
+
+<sect>Description of Procedures
+
+<p>
+The elements in the simulator, for instance a Node, Packet or whatever else,
+generate events whenever something significant occurs. These events are sent
+to whatever subclass of Trace has been registered with those objects.
+
+<p>
+This document describes how to extend the JavisTrace class to deal with new
+types of events that might have been added into the simulator (or are
+missing from the current implementation of JavisTrace) and get the into the
+output trace file.
+
+<p>
+JavisTrace stores a Hashtable object internally that translates the name of
+an event, e.g. "NodeEvent" into an object to process this event. Those
+objects are subclasses of "JavisHandler". A subclass of JavisHandler must
+define handleEvent (and anything else it wants to).
+
+
+<sect>How to hook in your own handlers
+
+<p>
+If you have read the previous section, this should be fairly obvious. You
+created your own subclass of "JavisHandler". When you're finished doing
+that, you can register this class with the JavisTrace class. You have to do
+this after creation of a JavisTrace object, but before any output has taken
+place.
+
+<p>
+You can achieve this by calling JavisTrace.registerHandler, pass as
+arguments the name of the event your class handles and an instance of the
+class.
+
+<p>
+If you don't have a clue how to write the actual handler class, the best
+thing to do is to look at one of the hard-coded ones, e.g. NodeHandler. Make
+sure you do not look at the one with the longest and most complicated bit of
+code first (e.g. PacketHandler). If you do have a clue, you're done, enjoy it.
+
+</article>

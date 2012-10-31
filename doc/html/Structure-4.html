@@ -1,0 +1,86 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2 Final//EN">
+<HTML>
+<HEAD>
+ <META NAME="GENERATOR" CONTENT="SGML-Tools 1.0.6">
+ <TITLE>How to build a network for simulation in JNS: Interfaces</TITLE>
+ <LINK HREF="Structure-5.html" REL=next>
+ <LINK HREF="Structure-3.html" REL=previous>
+ <LINK HREF="Structure.html#toc4" REL=contents>
+</HEAD>
+<BODY>
+<A HREF="Structure-5.html">Next</A>
+<A HREF="Structure-3.html">Previous</A>
+<A HREF="Structure.html#toc4">Contents</A>
+<HR>
+<H2><A NAME="s4">4. Interfaces</A></H2>
+
+<P>
+<P>An interface lets a node connect to a link, i.e. it is a bit like a network
+card. The class <CODE>Interface</CODE> is actually an abstract class, so you 
+cannot use it when building your network. Instead, you have to choose
+between <CODE>SimplexInterface</CODE> and <CODE>DuplexInterface</CODE>
+<P>
+<P>Those two classes share the important functionality you need, so it is
+described here. An interface (regardless of whether it is simplex or duplex)
+consists of:
+<UL>
+<LI>An IP address - a globally unique IP address by which this interface
+can be identified.</LI>
+<LI>A bandwidth - the bandwidth is given in bps. Most of the time, you
+will prefer to assign a bandwidth to a link and let all interfaces that
+connect to the link inherit the bandwidth.</LI>
+<LI>A reference to an IP handler - this is invisible to you. The interface
+knows which handler gets the packets that arrive.</LI>
+<LI>A queue - incoming and outgoing packets will be held in a queue until 
+they can receive further treatment.</LI>
+<LI>A maximum transfer unit (MTU) - the maximum packet length in bytes of a
+packet this interface can send. Defaults to 1500. Override if you want to see
+some IP fragmentation.</LI>
+</UL>
+<P>
+<P>There are several functions provided by all interfaces which are used almost
+all of the time.
+<UL>
+<LI>Attaching a link - You will need this after creating a link when you
+want to connect it to an interface. You can choose here whether the
+interface will take its bandwidth from the link.</LI>
+<LI>Attaching a queue - An interface contains a queue for packets. You can
+override the default queue here. The behaviour differs between
+<CODE>SimplexInterface</CODE> and <CODE>DuplexInterface</CODE>, check in the
+relevant sections.</LI>
+</UL>
+<P>
+<H2><A NAME="ss4.1">4.1 SimplexInterface</A>
+</H2>
+
+<P>A <CODE>SimplexInterface</CODE> is a unidirectional interface, which means it
+can either be a sender or a receiver, but not both. This class is used
+heavily internally but it is generally not very useful for simulation.
+Note that you can only attach a <CODE>SimplexLink</CODE> to a
+<CODE>SimplexInterface</CODE>.
+<P>
+<P>Simplex Interfaces contain a queue. By default, when a simplex interface is
+created, a <I>drop-tail</I> queue is attached to it without any further
+interaction from you. If you decide to attach your own queue (e.g. a RED
+queue you implemented) this default queue will be overwritten.
+<P>
+<H2><A NAME="ss4.2">4.2 DuplexInterface</A>
+</H2>
+
+<P>The <CODE>DuplexInterface</CODE> is much more like your network card. It really
+consists of two simplex interfaces internally, but most of the time you can
+ignore this. It is made of by a <I>sender</I> and a <I>receiver</I>
+interface.
+<P>
+<P>Note that attaching a queue to this interface works a bit differently. If
+you choose to do this, the <CODE>clone()</CODE> method of the queue you are
+attaching will be called and the two queues will be attach to the two
+simplex interfaces.
+<P>
+<P>
+<HR>
+<A HREF="Structure-5.html">Next</A>
+<A HREF="Structure-3.html">Previous</A>
+<A HREF="Structure.html#toc4">Contents</A>
+</BODY>
+</HTML>

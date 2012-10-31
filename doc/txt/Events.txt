@@ -1,0 +1,264 @@
+  JNS Event Type Documentation
+  Christian Nentwich (c.nentwich@cs.ucl.ac.uk)
+  08/03/1999
+
+  This file describes the events that are currently built into JNS and
+  gives a strict description of what parameters must be present in them.
+  ______________________________________________________________________
+
+  Table of Contents
+
+
+  1. Introduction
+
+  2. How to Handle Events
+
+  3. Packet Events
+
+     3.1 HopEvent
+     3.2 ReceiveEvent
+     3.3 EnqueueEvent
+     3.4 DequeueEvent
+     3.5 QueueDropEvent
+     3.6 LinkDropEvent
+
+  4. LinkEvent
+
+  5. Closing Words
+
+
+
+  ______________________________________________________________________
+
+  1.  Introduction
+
+  This document introduces you to the different kinds of Events that JNS
+  will create in response to things occurring in the network. You are
+  strongly advised to read this document and keep it for references if:
+
+  o  You are writing a new Trace class for JNS, for example a class that
+     will receive events and count the inter-arrival times of packets.
+
+  o  You are trying to build in support for new protocols and want to
+     send events when significant state changes in your protocol take
+     place. (You would of course have to write a Trace class that can
+     receive those events.)
+
+
+  The class Event is a very primitive class. An event in JNS is only
+  parameterised by
+
+  o  a name (String)
+
+  o  a time-stamp (double, in seconds)
+
+  o  and a list of parameters
+
+
+  The name characterises the type of the event. Events are typically
+  called names like "HopEvent" or "ReceiveEvent". The time-stamp is
+  necessary because it shows when the event occurred, without it the
+  whole tracing idea would be pointless.
+
+
+  The list of parameters contains the meat of the event. It is different
+  from event to event and  its contents are completely defined by the
+  name of the event. A list of parameters, well.., is made up by
+  EventParameter objects. Every event parameter contains
+
+  o  a name (String)
+
+  o  a value (Object)
+
+
+  The name of the parameter describes of what type the value is.  The
+  reason value is an object is because it differs from parameter to
+  parameter. A parameter like "Source Address" might have an IPAddr
+  object as a value, another parameter just an Integer object. Note that
+  the name parameter of any EventParameter must be case insensitive.
+  Keep that in mind when writing a Trace class that processes events.
+
+
+  2.  How to Handle Events
+
+  This section will give a brief description of what is involved in
+  handling events. The answer is really very simple. The trace class you
+  might be writing will be passed an Event and you have to somehow
+  convert what is contained in this event into your own format (for
+  example some kind of trace-file).
+
+
+  You just have to pass through a number of straight-forward steps in
+  order to accomplish this:
+
+  1. Identify the event name and fork - You will want to look at the
+     name parameter of the event in order to see which event it is and
+     then execute different bits of code depending on the event type.
+
+  2. Go through the parameters - in the code that handles the special
+     kind of event it is supposed to, go through the parameters. You
+     know which parameters to expect in a certain type of event because
+     they are all documented in here.
+
+  3. Look at each parameters name and fork - Depending on the
+     parameter's name, you will have to treat its value differently
+
+  4. Cast the value - After reaching the required code that can deal
+     with this parameter, cast the value to the object type it must
+     contain. You may exit with an error if it doesn't, but it will not
+     (unless strange things happen..)
+
+
+  That is really all there is to it. If you are still puzzled then I
+  recommend you read the following sections, which are a catalog to the
+  pre-defined events in JNS. You are also encouraged to read the source
+  code of the Javis trace-file writer class (jns.trace.JavisTrace) if
+  you want to find out how to handle events in practice. In addition,
+  look at the jns.elements.QueueDropTail class and the
+  jns.util.EventGenerator class if you want to see how events that are
+  later received by a Trace class are actually generated.
+
+
+
+  3.  Packet Events
+
+  Packet Events are generated whenever something significant occurs in
+  relation to a packet, for example it might be dropped, received, sent,
+  etc.  All Packet events share the following minimum set of parameters
+  you may extract for your pleasure:
+
+  o  "Source Address" (IPAddr) - the ultimate source IP of the packet
+
+
+  o  "Destination Address" (IPAddr) - the ultimate destination IP of the
+     packet
+
+  o  "Source Hop" (IPAddr) - the IP of the interface the packet just
+     left
+
+  o  "Destination Hop" (IPAddr) - the IP of the interface at the other
+     end of the link the packet is travelling on now
+
+  o  "Packet ID" (Integer) - the IP packet id
+
+  o  "Packet Protocol" (Integer) - the higher level protocol the packet
+     is carrying (constants defined in Protocols.java in jns.util)
+
+  o  "Packet Length" (Integer) - the length of the packet
+
+
+  Following now are the descriptions of which kinds of packet events
+  exist.
+
+
+  3.1.  HopEvent
+
+  A HopEvent is generated whenever a packet leaves an interface and goes
+  onto a link. It does not carry any additional parameters, just the
+  generic packet event parameters.
+
+
+  3.2.  ReceiveEvent
+
+  A ReceiveEvent is generated whenever a packet is received by an
+  interface from a link. It contains only the generic packet event
+  parameters.
+
+
+  3.3.  EnqueueEvent
+
+  An interface queue will generate an EnqueueEvent whenever a packet is
+  passed to it from the IP handler (in case of an outgoing interface) or
+  a packet is coming in from a link (in case of an incoming interface).
+
+  An EnqueueEvent contains all the Packet Event parameters plus the
+  following additional ones:
+
+  o  "Queue Length" (Integer) - The length of the queue in bytes after
+     enqueueing the packet
+
+
+
+  3.4.  DequeueEvent
+
+  An interface queue will generate a DequeueEvent whenever a packet is
+  removed from the queue. This will happen if, for example an IP handler
+  finds time to read a packet from an interface and the interface
+  dequeues the packet to pass it in.
+
+  A DequeueEvent contains all the Packet Event parameters plus the
+  following additional ones:
+
+  o  "Queue Length" (Integer) - The length of the queue in bytes after
+     dequeueing the packet
+
+
+
+
+
+  3.5.  QueueDropEvent
+
+  A QueueDropEvent is generated if a queue decides it is too full and
+  drops a packet. The event contains all parameters that every packet
+  event contains plus in addition:
+
+  o  "Queue Length" (Integer) - The length of the queue in bytes after
+     dropping the packet
+
+
+
+
+  3.6.  LinkDropEvent
+
+  A LinkDropEvent is generated when a link goes down (i.e. breaks). As
+  you can imagine, all packets on the link will be lost. This event has
+  no extra fields, just the ones that occur in every packet event.
+
+
+
+  4.  LinkEvent
+
+  A LinkEvent will be generated whenever a link changes its state (i.e.
+  it either breaks and "goes down" or it starts working again and "goes
+  up"). It contains the following parameters:
+
+  o  "Source Address" (IPAddr) - The address of the interface that feeds
+     packets into the link
+
+  o  "Destination Address" (IPAddr) - The address of the interface that
+     receives packets from the link
+
+  o  "State" (Integer) - The new state of the link, either State.UP or
+     State.DOWN, as defined in jns.util.State
+
+
+  5.  Closing Words
+
+  This is the complete list of events you may find in the version of JNS
+  that carried this file. If someone modified the code of JNS and did
+  not add their own event in here, it is most likely not documented at
+  all.
+
+
+  You are encouraged to add your own events to JNS in order to find out
+  more about the network, but scribble down the contents and exact
+  format somewhere so you (and anyone else) will know what is in there
+  later. Even better, why not add an entry to this file?
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

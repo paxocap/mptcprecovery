@@ -1,0 +1,50 @@
+
+IMPORTANT NOTE: This is modified version 1.7 of JNS. Version 1.6 was the last
+                version to come out of UCL, and is probably the version
+                which is safest to use, if you don't require any of the
+                bug inducing changes I have made to the source.
+                Version 1.6 can be retreived from:
+                
+                ftp://cs.ucl.ac.uk/nets/src/jns
+                
+
+------------------------------------------------------------------------
+				JNS 1.7
+------------------------------------------------------------------------
+(c)2002 Einar Vollset
+THIS SOFTWARE IS PROTECTED UNDER TERMS OF THE GNU GENERAL PUBLIC LICENSE.
+PLEASE REFER TO THE ENCLOSED FILE 'COPYING' FOR THE EXACT TERMS.
+
+This is version 1.7 of JNS, which adds some minor modifications to version
+1.6. The original README file distributed with version 1.6 is available
+in it's entirety as README.old
+
+Requirements:
+	
+	- JDK 1.3.1 
+	
+Note: As can be seen in the old README, version 1.6 only requires JDK 1.6, 
+and this is probably the case with version 1.7 as well, however, I 
+haven't used this version with anything but JDK 1.3.1.
+
+Changes made to structure (Please read the original README file first):
+
+- Moved all non-essential source files to test_src.
+- Added a lib directory which will contain JNS version 1.7 in a jar.
+- Moved all the original "meta doc" files (such as README, CHANGES and
+  TODO, etc) to the old subdirector, so I won't get confused. :-)
+
+
+Changes made to source (Overview, please refer to CHANGES and the documentation):
+
+- Made the simulator multi-threaded  (Done)
+- Created dynamic scheduling capability for the simulator (Done)
+- Created a stub facility for use with the dynamic scheduler (Todo)
+- Added multicast functionality to the simulator (Todo)
+- Created dynamic link up/down generator for the simulator (Todo)
+_______________________________________________________________________
+		    Modified JNS
+_______________________________________________________________________
+- MPTCP Protocol has been implemented.
+- It supports Go-Back-N, timeout and faster failure recovery model using NACK.
+- Algorithm and results can be found in MPTCP.pdf in the current folder.

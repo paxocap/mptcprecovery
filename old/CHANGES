@@ -1,0 +1,173 @@
+
+Mon Mar 22 19:06:29 GMT 1999 - (Chris)
+  - Merged Alex's code in
+  - Added IP to bogus (NAM and Javis) node number translation. Linear search
+    but who cares
+  - It works. I just witnessed the lovely three-way handshake of the go back
+    n protocol...
+  - Added a new example, Test_Bigger .. Creates a star-type topology with a
+    router in the middle and uses SGN to send packets around.
+  - fixed the Test_Packet example a bit..
+  - Added yet another test/example, Test_LinkDown.java
+  - Updated Events.sgml and Structure.sgml.
+  - Added data transfer to SGN. Looks nice with window size 4 and it
+    actually sticks to it. However, out of sequence delivery would break it
+    (there's no timeout or anything)
+  - 
+
+Fri Mar 19 10:42:51 GMT 1999 - (Chris)
+  - Added more tracing support. Nodes attach their IP handler to a trace
+    object now, it used to be hidden from tracing..
+  - Added attachWithTrace to the Simulator class that will attach elements
+    and do tracing setup at the same time. Saves some code.
+
+Wed Mar 17 10:08:29 GMT 1999 - (Chris)
+  - Fixed the agent scheme a bit so it uses a more realistic approach: The
+    new 'recipe' for sending packets is:
+      1) Call the 'canSend()' function of the lower-level agent
+      2) If yes, call the 'send()' function of the lower-level agent
+      3) If no, stop trying. Wait for a call to your indicate function with
+         the 'READY_TO_SEND' flag set. Start again at 1).
+  - I have decided that the SGN protocol will always accept packets and
+    buffer them.. so canSend returns true, always.
+  - Links do not accept packets when they're down anymore
+  - Added a 'LinkStateCommand' that can be used to bring up or take down 
+    links at specific times.
+
+Tue Mar 16 22:34:18 GMT 1999 - (Chris)
+  - The experiment continues, it's 22:34:18 (see below).
+  - 00:26:56. Blatantly ripped the TCP finite state machine for the SGN
+    protocol. All the connection setup and teardown is in there now.
+  - I have no means of testing all this so I've decided to write two
+    classes, RandomSource and RandomSink that will set up a SGN connection
+    between each other an send a random amount of data at random time 
+    intervals.
+  - Fixed a big in the IP handler. The protocol field did not get set ->
+    couldn't send any SGN packets because they didn't get passed up.
+  - 01:38:43. Connection established. Ok, I have now spent .. 4 hours on 
+    this protocol and I have never written a connection-oriented protocol
+    before let alone read about the details. Not too bad. I'll do data
+    transfer tomorrow. (we're over 4000 lines of code now, more to come)
+  - Moved the Route class outside the RoutingTable class, people should be
+    able to see it.
+  - Added two members to the route class that could be potentially useful  
+    for people writing routing protocols:
+        Object metric - a metric associated with this route, e.g. hop count
+        int ttl - time to live. This could be decremented and the route 
+                  deleted when it reaches zero
+    Both are not used by the IP implementation but really for people who 
+    want to extend the routing
+  -
+
+Mon Mar 15 21:54:34 GMT 1999 - (Chris)
+  - Links have a status up/down now. If set to down they drop all packets
+    on the immediately
+  - TIMING STARTS. I am implementing the go back n protocol now and timing
+    how long it takes. It is now 22:11:22.
+  - HALF FINISHED. It is 22:33:25 and I have finished the port multiplexing
+    class (SimpleGoBackN) that deals with handing packets to the right
+    ports and the SimpleGoBackNAgent object sitting there. 
+  - 22:45:00 can't continue, have to do other coursework..
+
+Sun Mar 14 21:57:44 GMT 1999 - (Chris)
+  - Added higher-level protocol handling to IP Handler.
+
+Thu Mar 11 01:01:05 GMT 1999 - (Chris)
+  - No coding today, the report is due soon
+  - But I wrote Overview.sgml, the file that gives insight into the internals
+    of JNS and hints on how to extend it..
+  - Also finished Structure.sgml with example source code. The manuals are now
+    >5000 words in total, not too bad.. but they're not complete still
+
+Tue Mar  9 21:43:13 GMT 1999 - (Chris)
+  - Finished IP fragment reassembly, looks fine. It works with the test 
+    example (which does not deliver out of sequence.. but the code is
+    written to work out of sequence, it's just not tested yet..)
+  - Fixed up the whole business of link-to-interface packet transfer a lot,
+    the link indicates when it is free now
+  - Added the first bits of tracing. Events get generated when packets are 
+    sent and when packets are enq'd now (Of course, noone's writing them yet)
+  - Wrote jns.util.EventGenerator, a set of utility functions that make
+    event generation easier
+  - More tracing, queues send enqueue, dequeue and drop events
+  - Wrote a documentation file that strictly prescribes the essential
+    parameters of Packet Events (e.g. HopEvent, ReceiveEvent, etc.)
+  - Added javadoc comments to a number of source files
+
+Mon Mar  9 23:59:04 GMT 1999 - (Chris)
+  - The first IP packet just made a whole round-trip around a network, time
+    to celebrate.. Well, the network consists of just three nodes (two hosts
+    and one router) but it shows that routing seems to work.
+  - I had to remove automatic creation of default routes when attaching
+    interfaces because it creates a loop when used with routers who cannot
+    route a packet.
+  - Implemented IP fragmentation, sort of works, but seems to generate a lot
+    of events. Certainly needs to be checked. Reassembly is missing..
+  - The many events are generated because the link sets a flag to 'cannot 
+    send' as long as one packet is being put on the wire, so it's fine. The
+    interfaces just retry very frequently.
+
+Sun Mar  7 21:33:03 GMT 1999 - (Chris)
+  - Added processing of incoming packets to interface and IP Handler, so
+    there is support for nearly a complete round trip now. 
+  - I spent the day writing about this instead of coding on it, so there's 
+    hopefully going to be more tomorrow..
+
+Sat Mar  6 12:52:49 GMT 1999 - (Chris)
+  - Wrote a PriorityQueue class to store the commands to be processed by the
+    simulator, where the priority is the time of the command..
+    Also wrote a test program.. TestPriority.java
+  - Implemented SimplexInterface to SimplexLink and DuplexInterface to 
+    DuplexLink attach functions. Harder than it sounds! there were lots of
+    checks to do.. 
+  - Two new test programs: TestSimplexAttach, TestDuplexAttach. Nuff said ;)
+  - Added the 'Route' and 'RoutingTable' class, everything in there to do
+    some routing, apart from the deleteRoute functions are not implemented.
+    (Don't think anyone would use them anyway)
+  - Added TestRouting.java 
+  - Lots of small additions to IPHandler, QueueDropTail
+  - IPHandler routes packets now. There is a flag whether the first
+    interface added to a node will become a default route for packets.
+  - Moved the whole lot to a jns/ directory, necessary to properly import
+    all this when it's in a jar.
+  - Implemented a few update functions. Indeed, packets get sent to the next
+    hop now, they go on the interface, queue, link, but they don't get taken
+    off yet. Routing works, too.
+  - Wrote Structure.sgml, describes how to build the static network 
+    structure from JNS components
+  - Updated the build_docs script to allow building of latex or HTML
+    documentation as an option
+
+Thu Mar  4 22:28:02 GMT 1999 - (Chris)
+  - Back from the Comms&Nets blues
+  - Added SimplexLink/DuplexLink
+  - Implemented the DropTail queue.. about 10 lines of code in total, I'd
+    say, without update()
+  - Wrote the util.Queue class because Java doesn't provide one. Use for 
+    anything that might require a queue (e.g. IPHandler for outgoing
+    packets)
+  - Added the command/ classes. You can specify now what happens when in 
+    the simulator. Also added 'StopCommand', which will stop the simulator..
+
+Wed Mar  3 01:02:34 GMT 1999 - (Chris)
+  - Nope, didn't miss a day, it's just past midnight :)
+  - Brushed up the elements/ classes a bit, added functionality, filled in 
+    bits
+  - Added some more Javis tracefile preamble writing. Biggest TODO at the 
+    moment: IP Addresses have to be translated to simple numbers for Javis/
+    NAM.
+  - Wrote the 'ExtendJavis' SGML file in doc/.
+
+Mon Mar  1 23:46:00 GMT 1999 - (Chris) 
+  - Rough night tonight, wrote about 1500 lines of code outlining the
+    simulator.
+  - I added all of the classes in all the subsystems.
+  - Wrote two little test programs, one testing the structure and one will
+    one day test sending a packet.
+  - The Javis trace file writer already writes a preamble :)
+  - Added the usual Makefile I always add, with the following functions at
+    your disposal:
+	'make clean' - get rid of all .class files
+	'make wc' - Do a word (and line) count on the .java files
+	'make rmtilde' - get rid of all backup files (*~)
+  - Added a Preferences class

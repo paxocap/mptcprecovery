@@ -1,0 +1,330 @@
+  A quick overview of JNS
+  Christian Nentwich (c.nentwich@cs.ucl.ac.uk)
+  10/03/1999
+
+  The purpose of this file is to provide a quick overview of the inter-
+  nals of JNS for someone who would like to make additions to the code
+  or is just interested in how the system works.
+  ______________________________________________________________________
+
+  Table of Contents
+
+
+  1. Introduction
+
+  2. Packages
+
+  3. How to build a network
+
+  4. Internals of a simulation run
+
+  5. How IP packets get transferred
+
+  6. Adding features to IP
+
+  7. How tracing works
+
+  8. Writing a new protocol
+
+
+
+  ______________________________________________________________________
+
+  1.  Introduction
+
+  This is the document that describes the internals of JNS. If you are
+  planning to extend JNS, maybe add a new protocol, then this file
+  should be your starting point. We are assuming that you have some
+  knowledge of networking (you should have done or should be doing at
+  the moment at least an undergraduate course on networks). If you want
+  to add complex protocols, then you will obviously need even more
+  knowledge.
+
+
+  This document will proceed by first showing you how JNS is partitioned
+  into separate packages and then giving you an insight into each of
+  them. Finally, some hints on how to extend JNS are given.
+
+
+  If you want to make sure that you understand this even more quickly,
+  have a look around the source code after each section. It is well
+  commented and you will understand everything written here more easily
+  if you look into the code. There are pointers in this document that
+  say which source file you should look into in each significant
+  section.
+
+
+
+
+  2.  Packages
+
+  JNS, like every modern piece of software, is not one huge piece of
+  code but partitioned into subsystems. The packages in JNS are divided
+  by functionality:
+
+  o  jns.element - contains the static elements of the network, nodes,
+     links, etc. Read the "Structure" file included here for a
+     beginner's introduction on the way networks are built in JNS.
+
+  o  jns.agent - contains the interfaces for agents. If you are building
+     a new protocol, it has to implement one of them. Your protocol
+     might be quite fancy so CL_Agent or CO_Agent might be too
+     restrictive for you. In that case, you still have to implement
+     Agent because, as you will see, your protocol has to attach to a
+     lower level protocol using this interface.
+
+  o  jns.trace - contains everything that is necessary to snoop at what
+     is going on in the network. A class is provided to turn events in
+     the network into output suitable for use with Javis or NAM.
+
+  o  jns.command - not a very interesting package, apart from the
+     Command abstract class which you will almost certainly extend if
+     you write a new protocol. You can use this to schedule calls to
+     your functions with the simulator.
+
+  o  jns.util - utilities, tools, etc. Contains an implementation of a
+     Queue data structure (not a networking queue!), a priority queue,
+     the IPAddr class, the Preferences class, etc. Feel free to use them
+     in your algorithms (everybody who has the Simulator has those
+     classes, so practice some code reuse).
+
+
+
+  3.  How to build a network
+
+
+  You are referred to the Structure document that can also be found in
+  this distribution. Make sure you read and understand it (it's trivial)
+  before you continue reading this document.
+
+
+
+  4.  Internals of a simulation run
+
+
+  Simulations are normally started by calling the run() function of the
+  Simulator class. The Simulator class uses a priority queue of Command
+  objects that have been put in there by any element of JNS (Command
+  objects are simply objects that define an execute() function. JNS will
+  call this function at the time when the command should be executed).
+  The "priority" is given by the time at which the command should occur.
+
+
+  To rephrase this in an understandable way, if a Command is added for
+  execution, it will be put in the right position in the queue so that
+  when JNS finds the next command to execute, the one with the lowest
+  time gets picked.
+
+
+  This algorithm guarantees that events are always executed in the right
+  order.  Before a command is executed, the current simulator time will
+  be set to the time contained in this command. Have a look at the
+  Command class in jns.command and the Simulator.run() function in jns
+  and it should be immediately clear what happens.
+
+
+  The commands added to the simulator can be of any kind of nature: You
+  could extend the Command class to provide an execute() function that
+  starts sending random data or a function that will change the error
+  characteristic of a link, or whatever you want to do really... A
+  special class called StopCommand is provided. If you schedule a call
+  to this class, it will stop the simulator at the time you choose.
+
+  Look at the source files jns/Simulator.java, jns/command/Command.java,
+  and jns/command/StopCommand.java to see what is meant by this section.
+
+
+
+
+  5.  How IP packets get transferred
+
+  This section describes how IP packets manage to travel from one node
+  to another. You should not have to read this section, even if you are
+  building a new protocol. The only reason why you might want to read it
+  anyway is that you want to improve the IP handling of JNS (maybe by
+  adding multicasting...).
+
+
+  The following classes are immediately involved in the transfer of IP
+  packets: IPHandler, the generator and receiver of IP packets,
+  SimplexInterface, queues outgoing and and incoming packets and passes
+  them on, either to a link or an IP handler, and SimplexLink, which
+  holds packets for a certain amount of time (the propagation delay)
+  before passing them on to other interfaces. The two convenience
+  classes, DuplexInterface and DuplexLink are not very interesting
+  because they merely forward calls to their simplex counterparts. You
+  can ignore them for the rest of this document.
+
+
+  The basic flow of packets should now be obvious: IPHandler -
+  SimplexInterface - SimplexLink - SimplexInterface - IPHandler. This is
+  not quite accurate because packets will go into the queue before going
+  on the link and after coming off the link, but is basically the
+  correct scenario.
+
+
+  Important: We will now describe how the packets actually get passed
+  around. IPHandler, SimplexInterface and SimplexLink all implement the
+  CL_Agent interface. So in order to send a packet using either of them
+
+  o  call the send(IPPacket packet) function of either of them. Note
+     that they will not send the packet immediately but wait for the
+     underlying service (e.g. link for interface) to indicate
+     READY_TO_SEND.
+
+
+  Also, in order to read from either of them:
+
+  o  wait for your indicate(..) function to be called with parameter
+     PACKET_AVAILABLE. You should be implementing the agent interface so
+     you will receive this call. If you do, then
+
+  o  use the read() function to read a packet. Check if the packet is
+     null, particularly if you did not wait for the indication because
+     there might not be a packet. Note:In a more realistic
+     implementation you should not call read after getting an
+     indication. Instead, schedule a command with the simulator that
+     will call a function of your class which in turn will read the
+     packet.
+
+
+  Having said that, this is what happens in the network now: If you call
+  the send() function of the IPHandler, it will put the packet you are
+  passing in its list of packet to be sent and schedule a call to its
+  own update() function. When that call happens, the IPHandler will
+  process all unprocessed packets (both those that are waiting to be
+  sent and the received ones that have to be passed on). The destination
+  address of your packet will be given to the RoutingTable which will
+  identify the interface the packet should be put on. The IPHandler
+  (after fragmentation and other nuisances) then calls the send()
+  function of that interface.
+
+
+  The SimplexInterface's send function will simply enqueue the packet
+  (thus causing an enqueue event to be generated and sent to a trace
+  object) and schedule a call to its own update() function. You can see,
+  this is starting to look similar. In the update() function, the
+  interface will ask the link if it can send a packet using the link's
+  canSend() function. The link might be busy, in that case we know it
+  will call the interface's indicate function later with a parameter of
+  READY_TO_SEND, so we don't do anything. Otherwise, the link is free so
+  we dequeue a packet (and generate a dequeue event) and give it to the
+  link. The link will now block.
+
+
+  When the send() function of the SimplexLink gets a packet, it will put
+  it in a list of packets currently on the link. It will then block
+  access to the link for exactly (packet size in bits)/(bandwidth)
+  seconds, i.e. it will schedule a call to a function that will unblock
+  the link after this time. When this time is over, an indication to the
+  sending interface is made that the link is free. When send() is
+  called, the link will in addition schedule a command that will
+  indicate the packet we just accepted to the interface at the other end
+  after time propagation delay + (packet size in bits)/(bandwidth).
+
+
+  So, when the link decides it will give the packet to the incoming
+  interface of the destination node, it calls indicate() on that
+  interface with a parameter of PACKET_AVAILABLE. The interface, in
+  turn, will make sure its update() method is called to read the packet
+  off the link.
+
+
+  This is getting quite boring, but you get the point. It is a fairly
+  standard way to handle packet transfer.
+
+
+  You should look at the files jns/element/SimplexInterface.java,
+  jns/element/SimplexLink.java and jns/elements/IPHandler.java, in this
+  order because the latter are more complex. Make sure you follow the
+  procedures so you can see what happens to a packet during one round-
+  trip.
+
+
+
+  6.  Adding features to IP
+
+  If you have read the previous section, you can now embark on adding
+  new features to how JNS handles IP packets, for example multicasting.
+  The source file you want to modify for this is
+  jns.elements/IPHandler.java. For most purposes, you do not need to
+  modify the link or interface files. Actually, for most purposes should
+  only have to modify the update() function of the IPHandler class
+  because that is the bit of code that takes care of routing packets,
+  sending them, forwarding them to higher level protocols, etc.
+
+
+  There are two loops in this function: One that processes all packets
+  waiting to be sent. You will want to edit this if you want to make
+  more complex routing decisions, provide cleaner fragmentation, etc.
+  The other loop processes all packets that have been received and are
+  either waiting to be sent on or waiting to be given to higher-level
+  protocols or which were received erroneously and have to be discarded.
+  You might have to edit this if, for example, you did provide some
+  complex fragmentation code, because you will have to reassemble
+  packets in a complex way then, right here. (By the way, there IS
+  fragmentation support in JNS, you can see it right there).
+
+
+
+  7.  How tracing works
+
+
+  Tracing is the process by which someone looks at what is actually
+  going on in a network. In JNS terms, the thing that looks is a "Trace"
+  and the things that are being looked are "traceable". Not
+  surprisingly, there are the following two rules:
+
+  o  If you want to receive information from the network, you have to
+     subclass the Trace class.
+
+  o  If you want to implement an element that provides information to
+     someone who is listening, subclass the Traceable class.
+
+
+  So all elements in the network that provide tracing information have
+  to be subclasses of Traceable. Notice that those elements always
+  provide the information, even when no one is listening. If someone
+  wants to listen, they have to "attach" themselves to a traceable
+  object. A subclass of trace will normally call the attach() method of
+  a traceable element to add itself to that element's list of listeners.
+
+
+  If something of significance happens, the traceable object will
+  generate an event, which is actually an instance of the class Event.
+  Every event has a name and list of parameters (you are referred to the
+  "Event" documentation enclosed in this package for a rather precise
+  documentation of event classes). This event is then propagated to all
+  the subclasses of Trace that have attached themselves to the
+  generating element.
+
+
+  If your custom protocol wants to generate an event, notice that all
+  the handling of attaching new Trace objects to your object (which, as
+  you know, must be a subclass of Traceable) is actually handled by the
+  superclass. You do not need to take care of anything. All you need to
+  do is call the sendEvent(event) function as soon as you have set up
+  your event. The superclass will send the event to everyone who wants
+  it - or maybe nobody if nobody's listening.
+
+
+  We hope that the tracing process is reasonably straight-forward. For a
+  different view on the subject read the "ExtendJavis" document that
+  covers the topic of writing event handlers that generate a Javis/NAM
+  trace-file and the "Event" document, which will give you good insight
+  into events themselves.
+
+
+
+  8.  Writing a new protocol
+
+
+  This section is still to be written. It will be finished by the
+  presentation of the project. The reason is that small interface
+  changes might be necessary
+
+
+
+
+
+

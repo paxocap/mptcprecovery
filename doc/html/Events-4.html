@@ -1,0 +1,31 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2 Final//EN">
+<HTML>
+<HEAD>
+ <META NAME="GENERATOR" CONTENT="SGML-Tools 1.0.6">
+ <TITLE>JNS Event Type Documentation: LinkEvent</TITLE>
+ <LINK HREF="Events-5.html" REL=next>
+ <LINK HREF="Events-3.html" REL=previous>
+ <LINK HREF="Events.html#toc4" REL=contents>
+</HEAD>
+<BODY>
+<A HREF="Events-5.html">Next</A>
+<A HREF="Events-3.html">Previous</A>
+<A HREF="Events.html#toc4">Contents</A>
+<HR>
+<H2><A NAME="s4">4. LinkEvent</A></H2>
+
+<P>A LinkEvent will be generated whenever a link changes its state (i.e. it either breaks and "goes down" or it starts working again and "goes up"). It contains
+the following parameters:
+<UL>
+<LI>"Source Address" (IPAddr) - The address of the interface that feeds
+packets into the link</LI>
+<LI>"Destination Address" (IPAddr) - The address of the interface that receives packets from the link</LI>
+<LI>"State" (Integer) - The new state of the link, either State.UP or State.DOWN, as defined in <B>jns.util.State</B></LI>
+</UL>
+<P>
+<HR>
+<A HREF="Events-5.html">Next</A>
+<A HREF="Events-3.html">Previous</A>
+<A HREF="Events.html#toc4">Contents</A>
+</BODY>
+</HTML>

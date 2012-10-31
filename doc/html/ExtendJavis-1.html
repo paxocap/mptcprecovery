@@ -1,0 +1,37 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2 Final//EN">
+<HTML>
+<HEAD>
+ <META NAME="GENERATOR" CONTENT="SGML-Tools 1.0.6">
+ <TITLE>How to add handling of new events to the JavisTrace class: Description of Procedures</TITLE>
+ <LINK HREF="ExtendJavis-2.html" REL=next>
+
+ <LINK HREF="ExtendJavis.html#toc1" REL=contents>
+</HEAD>
+<BODY>
+<A HREF="ExtendJavis-2.html">Next</A>
+Previous
+<A HREF="ExtendJavis.html#toc1">Contents</A>
+<HR>
+<H2><A NAME="s1">1. Description of Procedures</A></H2>
+
+<P>The elements in the simulator, for instance a Node, Packet or whatever else,
+generate events whenever something significant occurs. These events are sent
+to whatever subclass of Trace has been registered with those objects.
+<P>
+<P>This document describes how to extend the JavisTrace class to deal with new
+types of events that might have been added into the simulator (or are
+missing from the current implementation of JavisTrace) and get the into the
+output trace file.
+<P>
+<P>JavisTrace stores a Hashtable object internally that translates the name of
+an event, e.g. "NodeEvent" into an object to process this event. Those
+objects are subclasses of "JavisHandler". A subclass of JavisHandler must
+define handleEvent (and anything else it wants to).
+<P>
+<P>
+<HR>
+<A HREF="ExtendJavis-2.html">Next</A>
+Previous
+<A HREF="ExtendJavis.html#toc1">Contents</A>
+</BODY>
+</HTML>

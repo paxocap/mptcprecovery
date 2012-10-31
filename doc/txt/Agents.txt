@@ -1,0 +1,198 @@
+  Agent interaction in JNS
+  Christian Nentwich (c.nentwich@cs.ucl.ac.uk)
+  17/03/1999
+
+  This file describes how agents interact with each other. In other
+  words, it describes how different protocol layers communicate with
+  each other in JNS.
+  ______________________________________________________________________
+
+  Table of Contents
+
+
+  1. Introduction
+
+  2. Basic Interaction
+
+  3. Setting up agents
+
+  4. Data Transfer
+
+     4.1 Sending Data
+     4.2 Receiving Data
+
+  5. Examples
+
+
+
+  ______________________________________________________________________
+
+  1.  Introduction
+
+  This file will introduce you to the world of protocols in JNS.
+  Protocols are built using a layered approach (like in any network
+  these days). The bottom layer protocol in JNS is IP and everything
+  else builds on top of that.
+
+  There are three interfaces available for implementing agents: Agent,
+  which is the most generic class of agents, not normally used,
+  CL_Agent, which specifies the interface for connection-less agents and
+  CO_Agent which is used for connection-oriented services (this does not
+  mean that the service has to be reliable though!).
+
+  Any of these interfaces can be implemented to form new agents.
+
+
+
+  2.  Basic Interaction
+
+  Interaction between agents is strictly asynchronous in JNS. If you
+  give data to a lower-level agent to send, it will be put in a queue.
+  When the agent notices the new data, it will look at the queue and
+  pass the data on. The process then repeates.
+
+  Conversely, when data is received, an agent gets an 'indication' that
+  data is available. It will then read the data from the lower-level
+  agent and stick it into a queue where it waits for further collection.
+  It will then indicate to the next-higher agent that data is available
+  and the process starts again.
+
+
+
+  3.  Setting up agents
+
+  Obviously, agents are not naturally inclined to run on top of each
+  other. They somehow have to be attached to each other, for example TCP
+  has to be attached to IP.
+  In JNS, the order is that higher-level agents attach to lower-level
+  agents. For example, in order to attach TCP to IP you would use the
+  following code:
+
+  ______________________________________________________________________
+       ip_instance.attach(tcp_instance,Protocols.TCP);
+  ______________________________________________________________________
+
+
+  The Protocols.TCP parameter is an identifier by which the lower-level
+  protocol can identify packets and what higher-level agents they should
+  be given to. In the case of IP, all IP packets that have the protocol
+  field set to 'TCP' will be given to 'tcp_instance' now.
+
+
+  When the 'attach' function is called, the lower-level protocol will
+  subsequently reverse-attach itself to the higher-level protocol. This
+  is in order to give the higher level protocol a chance to obtain a
+  reference to the lower level. In the previous example 'tcp_instance'
+  had no way to get a reference to function:
+
+  ______________________________________________________________________
+         Tcp.attach(Agent lower_level)
+  ______________________________________________________________________
+
+
+  to do the reverse attachment.
+
+
+  For some detail on how all of this actually work, I'd recommend you
+  look at the jns/trace/SimpleGoBackN.java source file and
+  Test_GoBackN.java. The former is a protocol that attaches to IP.
+
+
+
+  4.  Data Transfer
+
+
+  4.1.  Sending Data
+
+  Data transfer works in a reactive way in JNS. You do not normally send
+  data unless someone 'indicates' to you that you should do so.
+  (Although you can if you want to.. and you have to as you will see).
+
+  The first thing to do when sending data is to call the canSend(...)
+  function of the underlying service. If it returns true, call the
+  send(...)  function of the underlying service immediately and your
+  data has been sent.
+
+  If canSend() returns false then you have to wait. You are now
+  guaranteed to receive a call to your agent's indicate(...) function
+  (see jns/agent/Agent.java for the agent interface. This is a function
+  that every agent has). The parameter to this function might be
+  READY_TO_SEND. In that case, you must call canSend() again and the
+  whole game starts again.
+
+
+
+  4.2.  Receiving Data
+
+  Receiving data is even more reactive than sending data. There is no
+  active element involved. When an underlying service has data for you,
+  it will call your indicate(...) function with a parameter of
+  PACKET_AVAILABLE. You can then call the read(...) function of the
+  underlying service to get your packet.
+
+  5.  Examples
+
+  Believe it or not, there is nothing more to say about agents in JNS.
+  The rest is just technical details. The best thing to do is to look at
+
+  o  jns/agent/Agent.java
+
+  o  jns/agent/CO_Agent.java
+
+  o  jns/agent/CL_Agent.java
+
+
+  Those files contain the interfaces agents use and each function in
+  them is well documented. You might also want to look at
+  SimpleGoBackN.java and RandomSource and RandomSink.java for some
+  examples.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

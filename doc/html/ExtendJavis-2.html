@@ -1,0 +1,36 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2 Final//EN">
+<HTML>
+<HEAD>
+ <META NAME="GENERATOR" CONTENT="SGML-Tools 1.0.6">
+ <TITLE>How to add handling of new events to the JavisTrace class: How to hook in your own handlers</TITLE>
+ <LINK HREF="ExtendJavis-1.html" REL=previous>
+ <LINK HREF="ExtendJavis.html#toc2" REL=contents>
+</HEAD>
+<BODY>
+Next
+<A HREF="ExtendJavis-1.html">Previous</A>
+<A HREF="ExtendJavis.html#toc2">Contents</A>
+<HR>
+<H2><A NAME="s2">2. How to hook in your own handlers</A></H2>
+
+<P>If you have read the previous section, this should be fairly obvious. You
+created your own subclass of "JavisHandler". When you're finished doing
+that, you can register this class with the JavisTrace class. You have to do
+this after creation of a JavisTrace object, but before any output has taken
+place.
+<P>
+<P>You can achieve this by calling JavisTrace.registerHandler, pass as
+arguments the name of the event your class handles and an instance of the
+class.
+<P>
+<P>If you don't have a clue how to write the actual handler class, the best
+thing to do is to look at one of the hard-coded ones, e.g. NodeHandler. Make
+sure you do not look at the one with the longest and most complicated bit of
+code first (e.g. PacketHandler). If you do have a clue, you're done, enjoy it.
+<P>
+<HR>
+Next
+<A HREF="ExtendJavis-1.html">Previous</A>
+<A HREF="ExtendJavis.html#toc2">Contents</A>
+</BODY>
+</HTML>

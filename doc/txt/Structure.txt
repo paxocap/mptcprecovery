@@ -1,0 +1,594 @@
+  How to build a network for simulation in JNS
+  Christian Nentwich (c.nentwich@cs.ucl.ac.uk)
+  06/03/1999
+
+  This file describes how to build the static structure of a network
+  (nodes, links, etc.) from the classes available in JNS.
+  ______________________________________________________________________
+
+  Table of Contents
+
+
+  1. Prerequisites
+
+  2. Introduction
+
+  3. Nodes
+
+  4. Interfaces
+
+     4.1 SimplexInterface
+     4.2 DuplexInterface
+
+  5. Links
+
+     5.1 SimplexLink
+     5.2 DuplexLink
+
+  6. An Example
+
+  7. The whole example code
+
+  8. Additional Comments
+
+
+
+  ______________________________________________________________________
+
+  1.  Prerequisites
+
+
+  Before reading this document, you should ask yourself the following
+  questions:
+
+  o  Does the term "subnet" mean anything to you? Are you scared of the
+     word "netmask" ?
+
+  o  Can you tell a "router" from a "host"? Is a "host" someone who
+     provides hospitality?
+
+  o  Does the expression public static void main(String args[]) look
+     meaningful?
+
+  o  Does MTU mean "Military Telecommunications Unit"?
+
+
+  If the answer to any of those is "yes", you will probably have to do
+  some reading before you can use JNS. You will have to read up on the
+  IP protocol, especially subnetting, the Java programming language
+  and/or basic networking terms.
+
+
+
+  2.  Introduction
+
+  This document will describe how you can build the network you want to
+  simulate in JNS. It is concerned with the static structure only, not
+  with dynamic things such as tracing or sending packets. Consequently,
+  when functions of several classes are described, those concerned with
+  data transfer are left out.
+
+
+  The functions presented here are not recommended for "daily use". JNS
+  was designed with many options in mind, thus you have quite a bit of
+  setup work to do in order to build your network. If you want to just
+  quickly build a network without much customisation you are strongly
+  advised to write some code that will take away most details (For
+  examples, a node together with an interface could be built
+  automatically and returned).
+
+
+  Again, this file describes how to build a network from the basic
+  building blocks:
+
+  o  Nodes - think of this as computers. The box on your desk or under
+     your desk.
+
+  o  Interfaces - the equivalent of network cards, modems, you name it.
+
+  o  Links - the cable that runs out of your network card into the next
+     one, your phone-line, etc.. Note, however, that links are between
+     two interfaces, not like an Ethernet cable that can connect more
+     than two computers.
+
+
+  Each of these will be described in detail in the next sections. Nearly
+  all of them can be attached to each other. As a reminder from here on,
+  JNS has a uniform naming scheme for attaching elements to others, the
+  function to do this is always called 'attach', regardless of what is
+  attached to what.
+
+
+
+  3.  Nodes
+
+
+  Nodes represent a computer. The class that implements a node is
+  called..  Node. In JNS, a node contains a couple of essential
+  components:
+
+  o  Zero or more Interfaces - Any computer needs an interface to a
+     network to participate. You can have zero interfaces if you find a
+     use for it.
+
+  o  One IP Handler object - you will not see this object if you do not
+     look for it actively. It takes care of sending and receiving IP
+     packets and dispatching them to higher level protocols. There is
+     only one of those in each node and it is attached to every
+     interface. It also contains the routing table.
+
+  o  A name - be imaginative ;)
+
+
+  That's about all the elements a node contains. The functionality
+  provided by nodes includes:
+
+  o  Attaching Interfaces - the most obvious functionality needed.
+
+  o  Adding a routing table entry - you can add a route to a subnet.
+
+  o  Adding a default route - the route to use if no other routes seem
+     to match.
+
+  It is worth pointing out that nodes are not particularly useful in any
+  simulation, there is nothing going in on inside that class. The only
+  purpose it has is to hold together its components, so the actual class
+  looks pretty boring.
+
+
+  The first thing you want to do when creating your network is create a
+  couple of Node objects to add interfaces to later.
+
+
+
+  4.  Interfaces
+
+
+  An interface lets a node connect to a link, i.e. it is a bit like a
+  network card. The class Interface is actually an abstract class, so
+  you cannot use it when building your network. Instead, you have to
+  choose between SimplexInterface and DuplexInterface
+
+
+  Those two classes share the important functionality you need, so it is
+  described here. An interface (regardless of whether it is simplex or
+  duplex) consists of:
+
+  o  An IP address - a globally unique IP address by which this
+     interface can be identified.
+
+  o  A bandwidth - the bandwidth is given in bps. Most of the time, you
+     will prefer to assign a bandwidth to a link and let all interfaces
+     that connect to the link inherit the bandwidth.
+
+  o  A reference to an IP handler - this is invisible to you. The
+     interface knows which handler gets the packets that arrive.
+
+  o  A queue - incoming and outgoing packets will be held in a queue
+     until they can receive further treatment.
+
+  o  A maximum transfer unit (MTU) - the maximum packet length in bytes
+     of a packet this interface can send. Defaults to 1500. Override if
+     you want to see some IP fragmentation.
+
+
+  There are several functions provided by all interfaces which are used
+  almost all of the time.
+
+  o  Attaching a link - You will need this after creating a link when
+     you want to connect it to an interface. You can choose here whether
+     the interface will take its bandwidth from the link.
+
+  o  Attaching a queue - An interface contains a queue for packets. You
+     can override the default queue here. The behaviour differs between
+     SimplexInterface and DuplexInterface, check in the relevant
+     sections.
+
+
+  4.1.  SimplexInterface
+
+  A SimplexInterface is a unidirectional interface, which means it can
+  either be a sender or a receiver, but not both. This class is used
+  heavily internally but it is generally not very useful for simulation.
+  Note that you can only attach a SimplexLink to a SimplexInterface.
+
+
+  Simplex Interfaces contain a queue. By default, when a simplex
+  interface is created, a drop-tail queue is attached to it without any
+  further interaction from you. If you decide to attach your own queue
+  (e.g. a RED queue you implemented) this default queue will be
+  overwritten.
+
+
+  4.2.  DuplexInterface
+
+  The DuplexInterface is much more like your network card. It really
+  consists of two simplex interfaces internally, but most of the time
+  you can ignore this. It is made of by a sender and a receiver
+  interface.
+
+
+  Note that attaching a queue to this interface works a bit differently.
+  If you choose to do this, the clone() method of the queue you are
+  attaching will be called and the two queues will be attach to the two
+  simplex interfaces.
+
+
+
+  5.  Links
+
+  Setting up links is the last step in building a network. Similar to
+  the Interface class, the Link class is abstract so you cannot
+  instantiate it. You have to make a choice between SimplexLink and
+  DuplexLink.
+
+
+  Links in JNS have the following common characteristics:
+
+  o  A Bandwidth - the bandwidth of a link is specified in bytes per
+     second (bps). You should know the bandwidth you want to use.
+
+  o  A propagation delay - this value specifies how long it takes for
+     one bit to travel from one length of the link to the other. You
+     will normally either know the propagation delay or calculate it
+     from 2/3 the speed of light (around the speed of an electron going
+     down a wire) and the length of the link.
+
+  o  An error rate - This is a value between 0 and 1. 0 means error free
+     and 1 means "ruins everything". JNS will generate a random variable
+     and if it is smaller than this value, it will corrupt the CRC of
+     the current packet the link is sending.
+
+
+  5.1.  SimplexLink
+
+
+  Most of the time, you will not use simplex links, so they are not very
+  interesting (although all processing is done internally using simplex
+  links anyway). If you do decide to use one, keep in mind that it can
+  only attach to a SimplexInterface.
+
+
+  5.2.  DuplexLink
+
+
+  A duplex link encapsulates two simplex links and can be attached to a
+  DuplexInterface. There is not much more to say about it but this is
+  definitely the kind of link you should use if you want to be sane
+  after laying out your network.
+
+
+
+
+
+
+  6.  An Example
+
+  We will now provide some annotated example code that shows how to
+  create a static network structure in JNS. We will create a simple
+  network of three nodes: Two hosts joined by a router. The way to
+  proceed is to show bits of code and explain them. What all steps will
+  have in common is that every element that is generated has to be
+  attached to the simulator.
+
+
+  Step 1: Obtain a reference to the Simulator
+
+  ______________________________________________________________________
+      Simulator sim=Simulator.getInstance();
+  ______________________________________________________________________
+
+
+
+  Note that only one instance of the simulator can ever exist. That's
+  why the constructor is private and you have to use this method to
+  obtain the singleton instance.
+
+
+  Step 2: Create the three nodes (the code should be self-explanatory)
+  and attach them to the simulator:
+
+  ______________________________________________________________________
+      Node src=new Node("Source node");
+      Node router=new Node("Router");
+      Node dest=new Node("Destination node");
+
+      sim.attach(src);
+      sim.attach(router);
+      sim.attach(dest);
+  ______________________________________________________________________
+
+
+
+  Step 3: Create an interface for the source and destination nodes and
+  attach them to those nodes. In this piece of code, observe the
+  following two things:
+
+  o  We are using duplex interfaces because we want two-way
+     communication, like a network card
+
+  o  The two nodes will be connected by a router. Therefore, by the
+     rules of IP, they have to be on different IP networks. We assign
+     two different network addresses.
+
+
+     ___________________________________________________________________
+         Interface src_iface=new DuplexInterface(new IPAddr(192,168,1,10));
+         src.attach(src_iface);
+         sim.attach(src_iface);
+
+         Interface dest_iface=new DuplexInterface(new IPAddr(128,116,11,20));
+         dest.attach(dest_iface);
+         sim.attach(dest_iface);
+     ___________________________________________________________________
+
+
+
+
+  Step 4: Create interfaces for the router and attach them to the
+  router. Note that the router will of course need two duplex interfaces
+  because it is attached to two different pieces of wire. In addition,
+  keep in mind that the router has to be on both IP networks (it is
+  customary to give the router the address .1 on both networks).
+
+
+  Caveat: Be careful not to assign the IP addresses of the router
+  interfaces the right way round but then attach the physical links the
+  wrong way round later.
+
+  ______________________________________________________________________
+      Interface route_iface192=new DuplexInterface(new IPAddr(192,168,1,1));
+      Interface route_iface128=new DuplexInterface(new IPAddr(128,116,11,1));
+
+      router.attach(route_iface192);
+      router.attach(route_iface128);
+
+      sim.attach(route_iface192);
+      sim.attach(route_iface128);
+  ______________________________________________________________________
+
+
+
+
+  Step 5: Connect all the interfaces via links. We need two links, one
+  from the source node to the router, and one from there to the
+  destination node. Since we are using duplex interfaces, we have to use
+  duplex links. We will create one 1Mbps link and one sample ISDN link:
+
+  ______________________________________________________________________
+      Link link_src_router=new DuplexLink(1000000,0.001);
+      Link link_router_dest=new DuplexLink(64000,0.1);
+
+      src_iface.attach(link_src_router,true);
+      route_iface192.attach(link_src_router,true);
+      sim.attach(link_src_router);
+
+      route_iface128.attach(link_router_dest,true);
+      dest_iface.attach(link_router_dest,true);
+      sim.attach(link_router_dest);
+  ______________________________________________________________________
+
+
+  Notice the parameter true that is being passed as a second argument
+  when the links are attached; it tells the interface to "inherit" the
+  link's bandwidth.
+
+
+  Step 6: Add the correct routing table entries. The physical structure
+  of the network is completely set up. However, the source host wouldn't
+  know how to reach the destination host yet because it has no routing
+  table entries.  (You may argue that the routing is quite obvious in
+  this example, however the simulator cannot guess that you will provide
+  a simple network, so routing has to be set in every case.).
+
+
+  We will make our life simple by adding default routes at the source
+  and destination node that point to the router. At the router, however,
+  we will add exact routing entries for the two subnets. Caveat: do not
+  enter default routes into the routing table of a router if you can
+  avoid it. If you have more than one router and someone sends a packet
+  with an unroutable address, those two routers might play ping-pong for
+  a while (until the packet times out) if you set default routes.
+
+
+
+
+
+  ______________________________________________________________________
+      src.addDefaultRoute(src_iface);
+      dest.addDefaultRoute(dest_iface);
+
+      router.addRoute(new IPAddr(192,168,1,0),new IPAddr(255,255,255,0),
+                      route_iface192);
+      router.addRoute(new IPAddr(128,116,11,0),new IPAddr(255,255,255,0),
+                      route_iface128);
+  ______________________________________________________________________
+
+
+  In the above code, notice the following things: We did indeed simply
+  add a default route for the two hosts. At the router, what we did was
+  effectively create two class C networks by setting the netmask to
+  255.255.255.0.
+
+  Step 7: No such step. We are finished!
+
+
+  7.  The whole example code
+
+  Here is the whole code of this example without interruptions:
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  ______________________________________________________________________
+      Simulator sim=Simulator.getInstance();
+
+      Node src=new Node("Source node");
+      Node router=new Node("Router");
+      Node dest=new Node("Destination node");
+      sim.attach(src);
+      sim.attach(router);
+      sim.attach(dest);
+
+
+      Interface src_iface=new DuplexInterface(new IPAddr(192,168,1,10));
+      src.attach(src_iface);
+      sim.attach(src_iface);
+
+      Interface dest_iface=new DuplexInterface(new IPAddr(128,116,11,20));
+      dest.attach(dest_iface);
+      sim.attach(dest_iface);
+
+
+      Interface route_iface192=new DuplexInterface(new IPAddr(192,168,1,1));
+      Interface route_iface128=new DuplexInterface(new IPAddr(128,116,11,1));
+
+      router.attach(route_iface192);
+      router.attach(route_iface128);
+
+      sim.attach(route_iface192);
+      sim.attach(route_iface128);
+
+
+      Link link_src_router=new DuplexLink(1000000,0.001);
+      Link link_router_dest=new DuplexLink(64000,0.1);
+
+      src_iface.attach(link_src_router,true);
+      route_iface192.attach(link_src_router,true);
+      sim.attach(link_src_router);
+
+      route_iface128.attach(link_router_dest,true);
+      dest_iface.attach(link_router_dest,true);
+      sim.attach(link_router_dest);
+
+
+      src.addDefaultRoute(src_iface);
+      dest.addDefaultRoute(dest_iface);
+
+      router.addRoute(new IPAddr(192,168,1,0),new IPAddr(255,255,255,0),
+                      route_iface192);
+      router.addRoute(new IPAddr(128,116,11,0),new IPAddr(255,255,255,0),
+                      route_iface128);
+  ______________________________________________________________________
+
+
+
+
+  8.  Additional Comments
+
+
+  As mentioned before already, you should not really have to do all this
+  setup work, particularly if you want to simulate a rather large
+  network (Internet, anyone?). Here are some suggestions on how to make
+  your life easier:
+
+  o  ALWAYS attach all your elements to the Simulator. Your simulation
+     might work without doing it but you will not be able to trace
+     anything.
+
+  o  Use loops if you have many nodes.
+
+  o  Write a class that will produce "shrink-wrapped" Nodes. A bit like
+     a mass computer retailer: Complete with an interface and routing
+     table. You could then produce a node with one line of code.
+
+  o  Abstract this idea further to produce whole networks shrink-
+     wrapped.
+
+  o  Alternatively, forget about all this. Download one of the many good
+     topology generators available on the web and either write a script
+     or modify its code so it directly generates JNS code.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

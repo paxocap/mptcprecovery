@@ -1,0 +1,37 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2 Final//EN">
+<HTML>
+<HEAD>
+ <META NAME="GENERATOR" CONTENT="SGML-Tools 1.0.6">
+ <TITLE>How to build a network for simulation in JNS: Additional Comments</TITLE>
+ <LINK HREF="Structure-7.html" REL=previous>
+ <LINK HREF="Structure.html#toc8" REL=contents>
+</HEAD>
+<BODY>
+Next
+<A HREF="Structure-7.html">Previous</A>
+<A HREF="Structure.html#toc8">Contents</A>
+<HR>
+<H2><A NAME="s8">8. Additional Comments</A></H2>
+
+<P>
+<P>As mentioned before already, you should not really have to do all this setup
+work, particularly if you want to simulate a rather large network (Internet,
+anyone?). Here are some suggestions on how to make your life easier:
+<UL>
+<LI><B>ALWAYS</B> attach all your elements to the Simulator. Your simulation might work without doing it but you will not be able to trace anything.</LI>
+<LI>Use loops if you have many nodes.</LI>
+<LI>Write a class that will produce "shrink-wrapped" Nodes. A bit like a 
+mass computer retailer: Complete with an interface and routing table. You
+could then produce a node with one line of code.</LI>
+<LI>Abstract this idea further to produce whole networks shrink-wrapped.</LI>
+<LI>Alternatively, forget about all this. Download one of the many good
+topology generators available on the web and either write a script or modify
+its code so it directly generates JNS code.</LI>
+</UL>
+<P>
+<HR>
+Next
+<A HREF="Structure-7.html">Previous</A>
+<A HREF="Structure.html#toc8">Contents</A>
+</BODY>
+</HTML>

@@ -1,0 +1,54 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2 Final//EN">
+<HTML>
+<HEAD>
+ <META NAME="GENERATOR" CONTENT="SGML-Tools 1.0.6">
+ <TITLE>How to build a network for simulation in JNS: Introduction</TITLE>
+ <LINK HREF="Structure-3.html" REL=next>
+ <LINK HREF="Structure-1.html" REL=previous>
+ <LINK HREF="Structure.html#toc2" REL=contents>
+</HEAD>
+<BODY>
+<A HREF="Structure-3.html">Next</A>
+<A HREF="Structure-1.html">Previous</A>
+<A HREF="Structure.html#toc2">Contents</A>
+<HR>
+<H2><A NAME="s2">2. Introduction</A></H2>
+
+<P>This document will describe how you can build the network you want to
+simulate in JNS. It is concerned with the static structure only, not with
+dynamic things such as tracing or sending packets. Consequently, when
+functions of several classes are described, those concerned with data 
+transfer are left out.
+<P>
+<P>The functions presented here are not recommended for "daily use". JNS was
+designed with many options in mind, thus you have quite a bit of setup work
+to do in order to build your network. If you want to just quickly build
+a network without much customisation you are strongly advised to write some
+code that will take away most details (For examples, a node together with an
+interface could be built automatically and returned).
+<P>
+<P>Again, this file describes how to build a network from the basic building
+blocks:
+<UL>
+<LI>Nodes - think of this as computers. The box on your desk or under your
+desk.</LI>
+<LI>Interfaces - the equivalent of network cards, modems, you name it.</LI>
+<LI>Links - the cable that runs out of your network card into the next
+one, your phone-line, etc.. Note, however, that links are between two
+interfaces, not like an Ethernet cable that can connect more than two
+computers.</LI>
+</UL>
+<P>
+<P>Each of these will be described in detail in the next sections. Nearly all
+of them can be attached to each other. As a reminder from here on, JNS has
+a uniform naming scheme for attaching elements to others, the function to
+do this is always called <CODE>'attach'</CODE>, regardless of what is attached
+to what.
+<P>
+<P>
+<HR>
+<A HREF="Structure-3.html">Next</A>
+<A HREF="Structure-1.html">Previous</A>
+<A HREF="Structure.html#toc2">Contents</A>
+</BODY>
+</HTML>

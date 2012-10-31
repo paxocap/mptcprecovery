@@ -1,0 +1,54 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2 Final//EN">
+<HTML>
+<HEAD>
+ <META NAME="GENERATOR" CONTENT="SGML-Tools 1.0.6">
+ <TITLE>How to build a network for simulation in JNS: Nodes</TITLE>
+ <LINK HREF="Structure-4.html" REL=next>
+ <LINK HREF="Structure-2.html" REL=previous>
+ <LINK HREF="Structure.html#toc3" REL=contents>
+</HEAD>
+<BODY>
+<A HREF="Structure-4.html">Next</A>
+<A HREF="Structure-2.html">Previous</A>
+<A HREF="Structure.html#toc3">Contents</A>
+<HR>
+<H2><A NAME="s3">3. Nodes</A></H2>
+
+<P>
+<P>Nodes represent a computer. The class that implements a node is called..
+<CODE>Node</CODE>. In JNS, a node contains a couple of essential components:
+<UL>
+<LI>Zero or more Interfaces - Any computer needs an interface to a network
+to participate. You can have zero interfaces if you find a use for it.</LI>
+<LI>One IP Handler object - you will not see this object if you do not
+look for it actively. It takes care of sending and receiving IP packets and
+dispatching them to higher level protocols. There is only one of those in
+each node and it is attached to every interface. It also contains the 
+routing table.</LI>
+<LI>A name - be imaginative ;)</LI>
+</UL>
+<P>
+<P>That's about all the elements a node contains. The functionality provided by
+nodes includes:
+<UL>
+<LI>Attaching Interfaces - the most obvious functionality needed.</LI>
+<LI>Adding a routing table entry - you can add a route to a subnet.</LI>
+<LI>Adding a default route - the route to use if no other routes seem to
+match.</LI>
+</UL>
+<P>
+<P>It is worth pointing out that nodes are not particularly useful in any
+simulation, there is nothing going in on inside that class. The only purpose
+it has is to hold together its components, so the actual class looks pretty
+boring.
+<P>
+<P>The first thing you want to do when creating your network is create a couple
+of <CODE>Node</CODE> objects to add interfaces to later.
+<P>
+<P>
+<HR>
+<A HREF="Structure-4.html">Next</A>
+<A HREF="Structure-2.html">Previous</A>
+<A HREF="Structure.html#toc3">Contents</A>
+</BODY>
+</HTML>

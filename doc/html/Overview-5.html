@@ -1,0 +1,110 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2 Final//EN">
+<HTML>
+<HEAD>
+ <META NAME="GENERATOR" CONTENT="SGML-Tools 1.0.6">
+ <TITLE>A quick overview of JNS: How IP packets get transferred</TITLE>
+ <LINK HREF="Overview-6.html" REL=next>
+ <LINK HREF="Overview-4.html" REL=previous>
+ <LINK HREF="Overview.html#toc5" REL=contents>
+</HEAD>
+<BODY>
+<A HREF="Overview-6.html">Next</A>
+<A HREF="Overview-4.html">Previous</A>
+<A HREF="Overview.html#toc5">Contents</A>
+<HR>
+<H2><A NAME="s5">5. How IP packets get transferred</A></H2>
+
+<P>This section describes how IP packets manage to travel from one node to 
+another. You should not have to read this section, even if you are building
+a new protocol. The only reason why you might want to read it anyway is that
+you want to improve the IP handling of JNS (maybe by adding multicasting...).
+<P>
+<P>The following classes are immediately involved in the transfer of IP packets:
+<CODE>IPHandler</CODE>, the generator and receiver of IP packets, 
+<CODE>SimplexInterface</CODE>, queues outgoing and and incoming packets and passes
+them on, either to a link or an IP handler, and <CODE>SimplexLink</CODE>, which
+holds packets for a certain amount of time (the propagation delay) before 
+passing them on to other interfaces. The two convenience classes, 
+<CODE>DuplexInterface</CODE> and <CODE>DuplexLink</CODE> are not very interesting
+because they merely forward calls to their simplex counterparts. You can 
+ignore them for the rest of this document.
+<P>
+<P>The basic flow of packets should now be obvious: <CODE>IPHandler - SimplexInterface - SimplexLink - SimplexInterface - IPHandler</CODE>. This is
+not quite accurate because packets will go into the queue before going on the
+link and after coming off the link, but is basically the correct scenario.
+<P>
+<P><B>Important:</B> We will now describe how the packets actually get passed
+around. <CODE>IPHandler</CODE>, <CODE>SimplexInterface</CODE> and <CODE>SimplexLink</CODE>
+all implement the <CODE>CL_Agent</CODE> interface. So in order to send a packet
+using either of them
+<UL>
+<LI>call the <CODE>send(IPPacket packet)</CODE> function of either of them. Note
+that they will not send the packet immediately but wait for the underlying
+service (e.g. link for interface) to indicate READY_TO_SEND.</LI>
+</UL>
+<P>
+<P>Also, in order to read from either of them:
+<UL>
+<LI>wait for your <CODE>indicate(..)</CODE> function to be called with parameter
+PACKET_AVAILABLE. You should be implementing the agent interface so you will
+receive this call. If you do, then</LI>
+<LI>use the <CODE>read()</CODE> function to read a packet. Check if the packet
+is <CODE>null</CODE>, particularly if you did not wait for the indication because
+there might not be a packet. <B>Note:</B>In a more realistic implementation
+you should not call read after getting an indication. Instead, schedule a
+command with the simulator that will call a function of your class which in
+turn will read the packet.</LI>
+</UL>
+<P>
+<P>Having said that, this is what happens in the network now: If you call the
+<CODE>send()</CODE> function of the <CODE>IPHandler</CODE>, it will put the packet
+you are passing in its list of packet to be sent and schedule a call to its
+own <CODE>update()</CODE> function. When that call happens, the <CODE>IPHandler</CODE>
+will process all unprocessed packets (both those that are waiting to be sent
+and the received ones that have to be passed on). The destination address
+of your packet will be given to the <CODE>RoutingTable</CODE> which will identify
+the interface the packet should be put on. The <CODE>IPHandler</CODE> (after
+fragmentation and other nuisances) then calls the <CODE>send()</CODE> function
+of that interface.
+<P>
+<P>The <CODE>SimplexInterface</CODE>'s send function will simply enqueue the packet
+(thus causing an enqueue event to be generated and sent to a trace object)
+and schedule a call to its own <CODE>update()</CODE> function. You can see, this is
+starting to look similar. In the <CODE>update()</CODE> function, the interface
+will ask the link if it can send a packet using the link's <CODE>canSend()</CODE>
+function. The link might be busy, in that case we know it will call the 
+interface's <CODE>indicate</CODE> function later with a parameter of READY_TO_SEND,
+so we don't do anything. Otherwise, the link is free so we dequeue a packet
+(and generate a dequeue event) and give it to the link. The link <B>will now
+block</B>.
+<P>
+<P>When the <CODE>send()</CODE> function of the <CODE>SimplexLink</CODE> gets a packet,
+it will put it in a list of packets currently on the link. It will then 
+<B>block access</B> to the link for exactly (packet size in bits)/(bandwidth)
+seconds, i.e. it will schedule a call to a function that will unblock the
+link after this time. When this time is over, an indication to the sending
+interface is made that the link is free. When <CODE>send()</CODE> is called,
+the link will in addition schedule a command that will indicate the packet we
+just accepted to the interface at the other end after time <CODE>propagation
+delay + (packet size in bits)/(bandwidth)</CODE>.
+<P>
+<P>So, when the link decides it will give the packet to the incoming interface
+of the destination node, it calls <CODE>indicate()</CODE> on that interface with
+a parameter of PACKET_AVAILABLE. The interface, in turn, will make sure its
+<CODE>update()</CODE> method is called to read the packet off the link.
+<P>
+<P>This is getting quite boring, but you get the point. It is a fairly standard
+way to handle packet transfer.
+<P>
+<P>You should look at the files <B>jns/element/SimplexInterface.java</B>,
+<B>jns/element/SimplexLink.java</B> and <B>jns/elements/IPHandler.java</B>,
+in this order because the latter are more complex. Make sure you follow the
+procedures so you can see what happens to a packet during one round-trip.
+<P>
+<P>
+<HR>
+<A HREF="Overview-6.html">Next</A>
+<A HREF="Overview-4.html">Previous</A>
+<A HREF="Overview.html#toc5">Contents</A>
+</BODY>
+</HTML>

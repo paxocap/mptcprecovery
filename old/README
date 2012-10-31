@@ -1,0 +1,65 @@
+
+------------------------------------------------------------------------
+				JNS 1.6
+------------------------------------------------------------------------
+(c)1998/99 Lee Eriera, Mark Jatana, Christian Nentwich, Aleksandar Nikolic
+THIS SOFTWARE IS PROTECTED UNDER TERMS OF THE GNU GENERAL PUBLIC LICENSE.
+PLEASE REFER TO THE ENCLOSED FILE 'COPYING' FOR THE EXACT TERMS.
+
+This is version 1.6 of Javis, quite probably the final version. What you
+have in this package is the complete Java source code.
+
+Requirements:
+	- JDK 1.1.7
+
+Note that JNS will quite probably work with the JDK 1.2 without changes
+(although that has not been tested).
+
+
+An Overview
+-----------
+
+The source code for JNS is contained in the jns/ subdirectory. Everything in
+the top level directory is just test files.
+
+In doc/ you will find the documentation, in various formats. All the formats
+have been built automatically from the SGML documents in doc/sgml.
+
+You may safely ignore all the Test*.java files. The interesting files are
+the Test_*.java files (please ignore the fact that the first wildcard would
+match everything :)
+
+
+
+Compiling JNS
+-------------
+
+It is easiest to compile JNS by compiling one of the test files.
+Test_GoBackN shows off a simple transport protocol with hardcoded window
+size four. Type:
+	
+	javac Test_GoBackN.java
+
+That will compile everything. If you want you can make a 'jar' file and
+delete all the sources and classes. In UNIX, type:
+
+	jar cf0 jns.jar `find -name "*.class" | xargs`
+
+There are a few settings in JNS that you might want to change, so have a
+look around jns.util.Preferences if you are sure of yourself.
+
+
+Running an Example
+------------------
+
+For a quick start, simply run the Test_GoBackN example. It will show you
+some data transfer using the SGN protocol we wrote:
+
+	java Test_GoBackN
+
+This will produce a trace file called test_gobackn.jvs which you can look at
+in Javis or NAM. You will see the three-way handshake and some data
+transfer.
+
+----
+That's it. Enjoy JNS. And read the documentation :)

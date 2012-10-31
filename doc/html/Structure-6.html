@@ -1,0 +1,150 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2 Final//EN">
+<HTML>
+<HEAD>
+ <META NAME="GENERATOR" CONTENT="SGML-Tools 1.0.6">
+ <TITLE>How to build a network for simulation in JNS: An Example</TITLE>
+ <LINK HREF="Structure-7.html" REL=next>
+ <LINK HREF="Structure-5.html" REL=previous>
+ <LINK HREF="Structure.html#toc6" REL=contents>
+</HEAD>
+<BODY>
+<A HREF="Structure-7.html">Next</A>
+<A HREF="Structure-5.html">Previous</A>
+<A HREF="Structure.html#toc6">Contents</A>
+<HR>
+<H2><A NAME="s6">6. An Example</A></H2>
+
+<P>We will now provide some annotated example code that shows how to create a
+static network structure in JNS. We will create a simple network of three
+nodes: Two hosts joined by a router. The way to proceed is to show bits of
+code and explain them. What all steps will have in common is that every element
+that is generated has to be attached to the simulator.
+<P>
+<P><B>Step 1:</B> Obtain a reference to the Simulator
+<HR>
+<PRE>
+    Simulator sim=Simulator.getInstance();
+</PRE>
+<HR>
+<P>Note that only one instance of the simulator can ever exist. That's why the
+constructor is private and you have to use this method to obtain the singleton
+instance.
+<P>
+<P><B>Step 2:</B> Create the three nodes (the code should be self-explanatory)
+and attach them to the simulator:
+<HR>
+<PRE>
+    Node src=new Node("Source node");
+    Node router=new Node("Router");
+    Node dest=new Node("Destination node");
+
+    sim.attach(src);
+    sim.attach(router);
+    sim.attach(dest);
+</PRE>
+<HR>
+<P><B>Step 3:</B> Create an interface for the source and destination nodes and
+attach them to those nodes. In this piece of code, observe the following two 
+things:
+<UL>
+<LI>We are using duplex interfaces because we want two-way communication,
+like a network card</LI>
+<LI>The two nodes will be connected by a router. Therefore, by the rules of
+IP, they have to be on different IP networks. We assign two different network
+addresses.</LI>
+</UL>
+
+<HR>
+<PRE>
+    Interface src_iface=new DuplexInterface(new IPAddr(192,168,1,10));
+    src.attach(src_iface);
+    sim.attach(src_iface);
+
+    Interface dest_iface=new DuplexInterface(new IPAddr(128,116,11,20));
+    dest.attach(dest_iface);
+    sim.attach(dest_iface);
+</PRE>
+<HR>
+<P>
+<P><B>Step 4:</B> Create interfaces for the router and attach them to the 
+router. Note that the router will of course need two duplex interfaces because
+it is attached to two different pieces of wire. In addition, keep in mind that
+the router has to be on both IP networks (it is customary to give the router
+the address .1 on both networks).
+<P>
+<P><B>Caveat:</B> Be careful not to
+assign the IP addresses of the router interfaces the right way round but then
+attach the physical links the wrong way round later.
+<HR>
+<PRE>
+    Interface route_iface192=new DuplexInterface(new IPAddr(192,168,1,1));
+    Interface route_iface128=new DuplexInterface(new IPAddr(128,116,11,1));
+
+    router.attach(route_iface192);
+    router.attach(route_iface128);
+
+    sim.attach(route_iface192);
+    sim.attach(route_iface128);
+</PRE>
+<HR>
+<P>
+<P><B>Step 5:</B> Connect all the interfaces via links. We need two links, one
+from the source node to the router, and one from there to the destination
+node. Since we are using duplex interfaces, we have to use duplex links. We
+will create one 1Mbps link and one sample ISDN link:
+<HR>
+<PRE>
+    Link link_src_router=new DuplexLink(1000000,0.001);
+    Link link_router_dest=new DuplexLink(64000,0.1);
+
+    src_iface.attach(link_src_router,true);
+    route_iface192.attach(link_src_router,true);
+    sim.attach(link_src_router);
+
+    route_iface128.attach(link_router_dest,true);
+    dest_iface.attach(link_router_dest,true);
+    sim.attach(link_router_dest);
+</PRE>
+<HR>
+
+Notice the parameter <CODE>true</CODE> that is being passed as a second argument
+when the links are attached; it tells the interface to "inherit" the link's
+bandwidth.
+<P>
+<P><B>Step 6:</B> Add the correct routing table entries. The physical structure
+of the network is completely set up. However, the source host wouldn't know
+how to reach the destination host yet because it has no routing table entries.
+(You may argue that the routing is quite obvious in this example, however the
+simulator cannot guess that you will provide a simple network, so routing has
+to be set in every case.).
+<P>
+<P>We will make our life simple by adding default routes at the source and 
+destination node that point to the router. At the router, however, we will
+add exact routing entries for the two subnets. <B>Caveat:</B> do not enter
+default routes into the routing table of a router if you can avoid it. If you
+have more than one router and someone sends a packet with an unroutable
+address, those two routers might play ping-pong for a while (until the packet
+times out) if you set default routes.
+<HR>
+<PRE>
+    src.addDefaultRoute(src_iface);
+    dest.addDefaultRoute(dest_iface);
+
+    router.addRoute(new IPAddr(192,168,1,0),new IPAddr(255,255,255,0),
+                    route_iface192);
+    router.addRoute(new IPAddr(128,116,11,0),new IPAddr(255,255,255,0),
+                    route_iface128);
+</PRE>
+<HR>
+
+In the above code, notice the following things: We did indeed simply add a
+default route for the two hosts. At the router, what we did was effectively
+create two class C networks by setting the netmask to 255.255.255.0.
+<P><B>Step 7:</B> No such step. <B>We are finished!</B>
+<P>
+<HR>
+<A HREF="Structure-7.html">Next</A>
+<A HREF="Structure-5.html">Previous</A>
+<A HREF="Structure.html#toc6">Contents</A>
+</BODY>
+</HTML>

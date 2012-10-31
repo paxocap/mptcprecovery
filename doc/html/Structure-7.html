@@ -1,0 +1,76 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2 Final//EN">
+<HTML>
+<HEAD>
+ <META NAME="GENERATOR" CONTENT="SGML-Tools 1.0.6">
+ <TITLE>How to build a network for simulation in JNS: The whole example code</TITLE>
+ <LINK HREF="Structure-8.html" REL=next>
+ <LINK HREF="Structure-6.html" REL=previous>
+ <LINK HREF="Structure.html#toc7" REL=contents>
+</HEAD>
+<BODY>
+<A HREF="Structure-8.html">Next</A>
+<A HREF="Structure-6.html">Previous</A>
+<A HREF="Structure.html#toc7">Contents</A>
+<HR>
+<H2><A NAME="s7">7. The whole example code</A></H2>
+
+<P>Here is the whole code of this example without interruptions:
+<HR>
+<PRE>
+    Simulator sim=Simulator.getInstance();
+
+    Node src=new Node("Source node");
+    Node router=new Node("Router");
+    Node dest=new Node("Destination node");
+    sim.attach(src);
+    sim.attach(router);
+    sim.attach(dest);
+
+
+    Interface src_iface=new DuplexInterface(new IPAddr(192,168,1,10));
+    src.attach(src_iface);
+    sim.attach(src_iface);
+
+    Interface dest_iface=new DuplexInterface(new IPAddr(128,116,11,20));
+    dest.attach(dest_iface);
+    sim.attach(dest_iface);
+
+
+    Interface route_iface192=new DuplexInterface(new IPAddr(192,168,1,1));
+    Interface route_iface128=new DuplexInterface(new IPAddr(128,116,11,1));
+
+    router.attach(route_iface192);
+    router.attach(route_iface128);
+
+    sim.attach(route_iface192);
+    sim.attach(route_iface128);
+
+
+    Link link_src_router=new DuplexLink(1000000,0.001);
+    Link link_router_dest=new DuplexLink(64000,0.1);
+
+    src_iface.attach(link_src_router,true);
+    route_iface192.attach(link_src_router,true);
+    sim.attach(link_src_router);
+
+    route_iface128.attach(link_router_dest,true);
+    dest_iface.attach(link_router_dest,true);
+    sim.attach(link_router_dest);
+    
+
+    src.addDefaultRoute(src_iface);
+    dest.addDefaultRoute(dest_iface);
+
+    router.addRoute(new IPAddr(192,168,1,0),new IPAddr(255,255,255,0),
+                    route_iface192);
+    router.addRoute(new IPAddr(128,116,11,0),new IPAddr(255,255,255,0),
+                    route_iface128);
+</PRE>
+<HR>
+<P>
+<HR>
+<A HREF="Structure-8.html">Next</A>
+<A HREF="Structure-6.html">Previous</A>
+<A HREF="Structure.html#toc7">Contents</A>
+</BODY>
+</HTML>
